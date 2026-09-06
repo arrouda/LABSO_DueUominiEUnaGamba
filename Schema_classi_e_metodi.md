@@ -344,23 +344,34 @@ LISTA CLASSI/FILE
 1) InfoNodo.java
 
 
-[Aggiungere commento ruolo della classe]
-
+InfoNodo è una classe che mi permette di creare oggetti con le informazioni relative ai nodi sensore.
+Mi serve per ottenere le iformazioni ai nodi sensore in altre classi come downloader o aggregatore senza dover accedere all'intera classe del nodo sensore.
 
 METODI:
 
+
+	- public InfoNodo(String id, String ip, int porta){
+
+		//costruttore
+
+	  }
+
 	
-	- public void getIP(){
+	- public String getIP(){
+
 		ritorna IP
+
 	  }
 
 
-	- public void getID(){
+	- public String getID(){
+
 		ritorna ID
 
 	  }
 
-	- public void getPort(){
+	- public int getPort(){
+
 		ritorna porta
 		
 	  }
