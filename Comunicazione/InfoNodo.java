@@ -1,4 +1,4 @@
-public class InfoNode {
+public class InfoNodo {
 
     public void getIP() {
         // ritorna IP
