@@ -1,3 +1,5 @@
+package Comunicazione;
+
 public class NetworkClient {
 
     public static void sendRequest(String ip, int porta, String message) {
