@@ -1,6 +1,6 @@
 import java.util.Map;
 
-public class MessageProtocol {
+public class GestoreMessaggi {
 
     public static void serilizedMessage(String command, Map<String, String> arguments) {
         /* trasfora il messaggio nel formato giusto per poter viaggiare su TCP */

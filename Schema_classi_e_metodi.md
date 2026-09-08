@@ -54,7 +54,7 @@ SCHEMA CLASSI E METODI:
     - getIP
     - getPort
 
- MessageProtocol.java
+ GestoreMessaggi.java
     - serilizedMessage
     - parseMessage
 
@@ -377,24 +377,25 @@ METODI:
 	  }
 
 
-2) MessageProtocol.java
+2) GestoreMessaggi.java
 
 
-[Aggiungere commento ruolo della classe]
+/* Gestore è una classe che mi permette di trasformare i comandi in stringhe per TCP e le stringhe ricevute TCP in comandi con i rispettivi parametri
+Per farlo uso una mappa che contiene coppie di stringhe parametro-valore;
+*/
 
 
 METODI:
 
-	- public static void serilizedMessage(String command, Map<String, String> arguments){
+	- public static String serilizedMessage(String command, Map<String, String> arguments){
 
 		trasfora il messaggio nel formato giusto per poter viaggiare su TCP */
 
 	  }
 
-	- public static void parseMessage(){
+	- public static Map<String, String> parseMessage(String message){
 		elabora il messaggio ricevuto
 		e lo scompone nel comando originale e i relativi parametri
-
 	  }
 
 
