@@ -402,14 +402,20 @@ METODI:
 3) NetwokClient.java
 
 
-[Aggiungere commento ruolo della classe]
+NetworkClient è una classe che permette ai client di creare dei socket con il server, di inviare richieste e ricevere le risposte
+Alla fine del metodo sendRequest (il metodo per inviare richieste tramite socket al server), restituisco al chiamate la risposta del server.
 
 
 METODI:
 
-	- public static void sendRequest(String ip, int porta, String message){
+	- public static String sendRequest(String ip, int porta, String message){
 
 		apro un socket con il destinatario attraverso la porta e l'ip; leggo il messaggio, lo invio e leggo la risposta
+
+		Uso i metodi BufferReader e PrintWriter per facilita ed efficientare la lettura e la scrittura tramite socket.
+		BufferReader e PrintWriter Avvolgono infatti degli oggetti di tipo InputStream e OutputStream e mi permettono di leggere e scrivere per righe invece che per singoli caratteri.
+
+		(vedi try-catch)
 
 	  }
 
