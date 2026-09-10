@@ -7,7 +7,7 @@ public class NetworkClient {
 
     public static String sendRequest(String ip, int porta, String message) {
         
-        String Risposta = "";
+        String Risposta = null;
 
         try(
 
@@ -33,6 +33,12 @@ public class NetworkClient {
             // (try-with-resources è come se ci fosse un blocco finally che chiude le risorse con close)
 
         ){
+
+            //imposto un timeout di 10 secondi entro il quale mi blocco se non ricevo risposta
+            // in questo modo sono sicuro che se un nodo sensore accetta la conensione ma poi non risoponde, 
+            // sto bloccato solo 10 sec.
+
+            socket.setSoTimeout(10000);
             
             /* 
             ora invio i messaggi dal client al server con il PrintWriter 
@@ -51,6 +57,7 @@ public class NetworkClient {
 
         } catch (IOException e) {
         }
+
     
         return Risposta;
     }
