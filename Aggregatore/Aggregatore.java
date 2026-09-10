@@ -1,5 +1,7 @@
 import java.io.*;
 import java.net.*;
+import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
 
 public class Aggregatore {
@@ -67,9 +69,8 @@ public class Aggregatore {
     // così più sensori possono essere serviti contemporaneamente
     
 
-    }
 
-    private static void listenForClients(){
+    private void listenForClients(){
         //loop continuo con serverSocket.acceot() per accettare nuove connessioni
         // dai sensori e instanziare per ciascuna un ClientHandler su un nuovo thread
 
