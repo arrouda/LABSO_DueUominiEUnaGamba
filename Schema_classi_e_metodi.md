@@ -73,59 +73,34 @@ LISTA CLASSI/FILE
 1) Aggregatore.Java
 
 
-Ruolo della classe: è il punto d'ingresso e l'orchestratore del nodo Aggregatore.
-Rappresenta il server centrale della rete distribuita: possiede le due risorse
-condivise tra tutte le connessioni attive (il Registro delle rilevazioni
-possedute dai sensori e il Logger delle richieste di download) e coordina i
-due compiti concorrenti del sistema; l'ascolto di nuove connessioni dai
-sensori e l'interfaccia a riga di comando per l'operatore locale.
+Aggregatore è la classe principale, il server centrale: crea le risorse condivise (Registro e Logger),
+apre il ServerSocket e gestisce sia l'ascolto dei sensori che i comandi da terminale
 
 
 
 METODI:
 
 	- public static void main(String[] args)
-	argomenti: `args`, un array di stringhe da cui si legge solo `args[0] (la porta); ritorna: void.
 
-  Punto d'ingresso del programma. Legge la porta di ascolto passata da riga
-  di comando, crea l'istanza dell'Aggregatore insieme alle risorse condivise
-  (Registro e Logger), apre il ServerSocket su quella porta, avvia su un
-  thread separato il loop di ascolto delle connessioni (listenForClients)
-  e lascia il thread principale alla gestione della CLI (startCLI).
+	legge la porta da riga di comando, crea l'aggregatore con Registro e Logger,
+		apre il ServerSocket, avvia il thread di ascolto e poi la CLI
 	
 
 	- `private void startCLI()` 
-	argomenti: nessuno; 
-	ritorna: void.
-
-  Gestisce il ciclo dei comandi digitati da tastiera mentre l'aggregatore è
-  in esecuzione: listdata (interroga il Registro e stampa tutte le
-  rilevazioni presenti sulla rete con i nodi che le possiedono), log
-  (stampa la cronologia delle richieste di download registrate dal Logger)
-  e quit (chiude il ServerSocket — il che termina anche il thread di
-  ascolto — e ferma il programma)
 	
+	legge i comandi da tastiera (listdata, log, quit) e li esegue
+
 
 	- `private void listenForClients()
-	argomenti: nessuno; 
-	ritorna: void.
-
-  Loop continuo che chiama serverSocket.accept(), bloccandosi finché un
-  nuovo sensore non si connette. Per ogni connessione accettata crea
-  un'istanza di GestoreClient (passandole il socket e le risorse condivise
-  Registro/Logger) e la avvia su un thread nuovo, così più sensori possono
-  essere gestiti in parallelo senza bloccarsi a vicenda.
-	
+	resta in loop su accept(), per ogni sensore che si connette crea
+	un GestoreClient e lo avvia su un thread nuovo
 	
 
 2) GestoreClient.Java
 
 
-Ruolo della classe: rappresenta la connessione con un
-singolo sensore. Ogni sensore che si collega ottiene la propria istanza di
-GestoreClient, eseguita su un thread dedicato: è qui che i messaggi testuali
-ricevuti dal socket vengono interpretati e tradotti in chiamate al Registro
-o al Logger.
+GestoreClient gestisce la connessione con un singolo sensore: ogni sensore che si collega
+ha la sua istanza su un thread dedicato, che legge i messaggi e li traduce in chiamate al Registro
 
 
 
@@ -133,46 +108,28 @@ METODI:
 
 
 	public GestoreClient(Socket socket, Registro registro, Logger log)` -> costruttore. 
- 	argomenti: socket (la connessione con quel sensore), registro e log (le risorse condivise passate dall'Aggregatore);
-  	ritorna: niente, un costruttore non ha tipo di ritorno.
 
-  Salva i tre riferimenti nei campi dell'istanza, così sono
- disponibili agli altri metodi.
+  salva i tre riferimenti nei campi dell'istanza, così sono disponibili agli altri metodi.
 
 
-	- public void run()`
-	argomenti: nessuno;
-	ritorna: void.
+	- public void run()
 
-  Implementa Runnable: è il metodo eseguito quando parte il thread. Apre
-  gli stream di lettura/scrittura sul socket e resta in un ciclo a leggere
-  una riga alla volta, passandola a gestoreRichiesta e rispedendo indietro
-  la risposta. Se la connessione cade senza un QUIT esplicito (eccezione
-  IOException), il nodo viene comunque rimosso dal Registro nel blocco
-  catch, così l'aggregatore non continua a proporlo agli altri sensori.
+	legge una riga alla volta dal socket, la passa a gestoreRichiesta
+	e rimanda la risposta; se la connessione cade toglie il nodo dal registro
 
 
 
-	`private String gestoreRichiesta(String richiesta)
-	argomenti: richiesta, la riga di testo ricevuta dal sensore; 
-  	ritorna: String, la riga di risposta da rimandare al sensore.
-
-  Decodifica il comando (prima parola della riga) e lo esegue:
-    REGISTER → chiama registro.registerData(...), ritorna "OK".
- 	NODES_FOR` → chiama registro.getNodesForData(...), ritorna l'elenco
-    dei nodi separati da virgola.
-  	TOKEN` → chiama registro.requestToken(...); se non c'è nessun nodo
-    disponibile ritorna S"NONE", altrimenti il nome del nodo da cui
-    scaricare. In entrambi i casi registra il tentativo nel Logger.
-  	QUIT` → rimuove il nodo dal Registro, ritorna "OK".
-	qualsiasi altro comando → ritorna un messaggio di errore.
+	private String gestoreRichiesta(String richiesta)
+	capisce il comando (REGISTER, NODES_FOR, TOKEN, QUIT) e chiama il metodo
+	giusto sul Registro, poi restituisce la risposta da mandare al sensore
 
 
 
 3) Logger.Java
 
 
-[Aggiungere commento ruolo della classe]
+Logger tiene la cronologia delle richieste di download tra sensori,
+usata dal comando "log" dell'aggregatore
 
 
 METODI:
@@ -188,16 +145,18 @@ METODI:
 
 	- public synchronized List<String> getLogs(){
 
-        	restituisce l'elenco formattato dei log per la stampa del comando log
+        	ritorna una copia della lista delle voci registrate
+	  }
 
-    	  }
+    	  
 
 
 
 4) Registro.Java
 
 
-[Aggiungere commento ruolo della classe]
+Registro tiene traccia di quali nodi possiedono quali rilevazioni e dove si trovano
+(ip e porta), così l'aggregatore sa chi proporre a chi
 
 
 METODI:
