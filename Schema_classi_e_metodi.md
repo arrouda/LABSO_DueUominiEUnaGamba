@@ -50,6 +50,7 @@ SCHEMA CLASSI E METODI:
 [comunicazione/]
 
  InfoNodo.java
+	- costruttore
     - getID
     - getIP
     - getPort
@@ -62,8 +63,12 @@ SCHEMA CLASSI E METODI:
     - sendRequest
 
  RobustDownloader.java
+ 	- costruttore
     - downloadWhitRetry
     - releaseToken
+	- requestToken
+	- tryDownload
+	- notificaAggregatore
  
 
 [AGGREGATORE]
@@ -415,12 +420,22 @@ METODI:
 4) RobustDownloader.java
 
 
-[Aggiungere commento ruolo della classe]
+È una classe che fornisce oggetti per provare a fare il downlad da altri nodi sensore di specifiche misurazioni
+
+Il nodo sensore che crea il downloader chiede all'aggregatore un token per un nodo sensore che la possiede.
+
+Una volata ottenuto, il nodo sensore tenata il download e se ci riesce rilascia il token e restituisce la misurazione, se no avvisa l'aggregatore che rimuove il nodo dal registro.
+
+Questo avviene in un ciclo che continua finche non avviene il download o fino a quando non finiscono i nodi a cui chiedere
 
 
 METODI:
 
-	- public static void downloadWhitRetry(String fileName) {
+	- public RobustDownloader(String IP, int porta){
+		//costruttore
+	}
+
+	- public String downloadWhitRetry(String fileName) {
 
 		richiede il token e l'indirizzo del peer all'aggregatore; 
 		tenta la connessione verso il sensore sorgente; 
@@ -429,9 +444,26 @@ METODI:
 	  }
 
 
- 	- public static void releaseToken(String dataName, String sourceNode, boolean success) {
+ 	- public void releaseToken(String dataName, String sourceNode, boolean success) {
 
  		libera il token comunicando all'aggregatore l'esito del download
 
  	}
 
+	private String tryDownload(String ipNodoSensore, int portaNodoSensore, String Misurazione){
+
+		provo il download e restituisco la risposta
+
+	}
+
+	private void notificaAggregatore(String idNodoSensore, String misurazione){
+
+		notifico l'aggregatore in caso di nodo scollegato in modo che possa rimuovere il sensore dal registro
+		
+	}
+
+	private Map<String, String> requestToken(String Misurazione, String IdNodoRichiedente){
+
+		richiedo il token di un nodo che possiede la misurazione
+
+	}
