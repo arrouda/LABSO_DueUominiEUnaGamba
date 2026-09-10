@@ -1,7 +1,7 @@
 public class ArchivioLocale {
     public static void aggiungiMisure(String nome, String contenuto) {
         /* SALVA UNA NUOVA RILEVAZIONE ILN LOCALE E NOTIFICA L'AGGREGATORE */
-
+//qui ci penso io
         // TO DO
     }
 
