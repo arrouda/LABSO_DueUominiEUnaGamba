@@ -1,7 +1,11 @@
+
+import Comunicazione.GestoreMessaggi;
+ 
 import java.io.*;
 import java.net.Socket;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 
 public class GestoreClient implements Runnable {
@@ -50,47 +54,51 @@ public class GestoreClient implements Runnable {
         }
     }
  
-    // formato dei messaggi (righe di testo semplici, comando + argomenti separati da spazio):
-    //   REGISTER <idNodo> <dato1,dato2,...>
-    //   NODES_FOR <nomeDato>
-    //   TOKEN <nomeDato>
-    //   QUIT
+    // messaggio tipo "comando: REGISTER;id=nodo1;misurazioni=R0,R1;ip=...;porta=..."
+    // GestoreMessaggi.parseMessage lo trasforma in una mappa con "comando" +
+    // tutte le altre coppie chiave-valore (nomi di Roda: id, misurazione, ip, porta)
 
 
-   private String gestoreRichiesta(String richiesta) {
-      // decodifica le richiesta ricevuta (registrati, chiedi lista, richiedi token)
-      // e invoca i relativi metodi del Registro o Logger
-
-      String[] parti = richiesta.split(" ");
-        String comando = parti[0];
+private String gestoreRichiesta(String richiesta) {
+        Map<String, String> parametri = GestoreMessaggi.parseMessage(richiesta);
+        String comando = parametri.get("comando");
  
         if (comando.equals("REGISTER")) {
-            // il sensore comunica chi è e quali rilevazioni possiede;
-            // salviamo l'id qui perché serve anche più avanti (es. in QUIT)
-            idNodo = parti[1];
-            List<String> dati = Arrays.asList(parti[2].split(","));
-            registro.registerData(idNodo, dati);
+            // il sensore comunica chi è, quali rilevazioni possiede e dove si trova
+            // (ip e porta servono a chi vorrà scaricare da lui più avanti)
+            idNodo = parametri.get("id");
+            List<String> dati = Arrays.asList(parametri.get("misurazioni").split(","));
+            String ip = parametri.get("ip");
+            String porta = parametri.get("porta");
+            registro.registerData(idNodo, dati, ip, porta);
             return "OK";
  
         } else if (comando.equals("NODES_FOR")) {
             // il sensore vuole sapere chi altro possiede una certa rilevazione
-            List<String> nodi = registro.getNodesForData(parti[1]);
+            String nomeDato = parametri.get("misurazione");
+            List<String> nodi = registro.getNodesForData(nomeDato);
             return String.join(",", nodi);
  
         } else if (comando.equals("TOKEN")) {
             // il sensore chiede il permesso per scaricare una rilevazione:
             // il registro sceglie da quale nodo può prenderla (mai da se stesso)
-            String nomeDato = parti[1];
-            String nodo = registro.requestToken(nomeDato, idNodo);
+            // e restituisce "id;ip;porta" di quel nodo, oppure null se non c'è
+            String nomeDato = parametri.get("misurazione");
+            String risultato = registro.requestToken(nomeDato, idNodo);
  
             // registriamo comunque il tentativo nel log, sia che sia andato
             // a buon fine sia che non ci fosse nessun nodo disponibile
-            if (nodo == null) {
+            if (risultato == null) {
                 log.logOperation("N/D", idNodo, nomeDato, false);
                 return "NONE";
             }
-            log.logOperation(nodo, idNodo, nomeDato, true);
-            return nodo;
+ 
+            // risultato è già "id;ip;porta": lo rimandiamo così com'è,
+            // il sensore che riceve sa come leggerlo
+            String[] infoNodo = risultato.split(";");
+            String idNodoTarget = infoNodo[0];
+            log.logOperation(idNodoTarget, idNodo, nomeDato, true);
+            return risultato;
  
         } else if (comando.equals("QUIT")) {
             // il sensore si sta disconnettendo volontariamente dalla rete
@@ -101,4 +109,8 @@ public class GestoreClient implements Runnable {
             return "ERRORE comando sconosciuto";
         }
     }
+
+
+
+
 }
