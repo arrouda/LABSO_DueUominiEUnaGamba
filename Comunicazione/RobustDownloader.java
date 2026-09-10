@@ -163,7 +163,7 @@ public class RobustDownloader {
 
         String messaggio = GestoreMessaggi.serializedMessage("NODE_FAILED", parametri);
 
-        String risposta = NetworkClient.sendRequest(ipAggregatore, portaAggregatore, messaggio);
+        NetworkClient.sendRequest(ipAggregatore, portaAggregatore, messaggio);
     }
 
 
