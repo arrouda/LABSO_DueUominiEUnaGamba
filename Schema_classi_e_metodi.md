@@ -352,7 +352,7 @@ METODI:
 
 	- public InfoNodo(String id, String ip, int porta){
 
-		//costruttore
+		costruttore
 
 	  }
 
