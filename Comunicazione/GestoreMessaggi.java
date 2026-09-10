@@ -2,9 +2,9 @@ package Comunicazione;
 
 import java.util.*;
 
-/**
- * Classe che gestisce la formattazione dei messaggi da inviare e ricevere via socket.
- * Trasfroma i comandi e gli argomenti in stringhe per TCP e viceversa.
+/*
+ Classe che gestisce la formattazione dei messaggi da inviare e ricevere via socket.
+ Trasfroma i comandi e gli argomenti in stringhe per TCP e viceversa.
  */
 
 public class GestoreMessaggi {

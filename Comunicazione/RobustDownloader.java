@@ -2,6 +2,15 @@ package Comunicazione;
 
 import java.util.*;
 
+/* 
+ Classe per la gestione del download robusto di dati da nodi sensore.
+ Il downloader chiede all'aggregatore il token del nodo che possiede una misurazione
+ tenta il downlad e se ci riesce rilascia il token e comunica la rosposta
+
+ Se no avvisa l'aggregatore che il nodo è irraggiungibile.
+
+ il ciclo continua fino a che o non riesco a scaricare la misurazione o l'aggregatore non ha più nodi disponibili per quella misurazione
+*/
 
 public class RobustDownloader {
 

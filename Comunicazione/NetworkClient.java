@@ -3,6 +3,12 @@ package Comunicazione;
 import java.io.*;
 import java.net.*;
 
+/* 
+ Classe per la gestione della comunicazione di rete del client.
+ Invio le richiesye tramite socket e ricevo le risposte dal server.
+ Ho usato le classi PrintWriter e BufferedReader per poter leggere e scrivere per righe invece che per carattere.
+ */
+
 public class NetworkClient {
 
     public static String sendRequest(String ip, int porta, String message) {
