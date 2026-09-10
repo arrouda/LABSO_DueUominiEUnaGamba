@@ -206,6 +206,9 @@ METODI:
         	rilascia l'autorizzazione/token per iniziare il download di una specifica rilevazione
 	  }
 
+	public synchronized Map<String, List<String>> getAllData(){
+		ritorna tutte le rilevazioni presenti con i nodi che le possiedono
+	}
 
 
 
