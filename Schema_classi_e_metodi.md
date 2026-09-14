@@ -230,23 +230,24 @@ LISTA CLASSI/FILE
 METODI:
 
 
-	- public static void aggiungiMisure(String nome, String contenuto){
-		
-		SALVA UNA NUOVA RILEVAZIONE ILN LOCALE E NOTIFICA L'AGGREGATORE
-    	  }
+	public ArchivioLocale(){
+        costruttore
+    }
 
+    public synchronized void aggiungiMisura(String nome, String contenuto){
+        Salva o aggiorna una misurazione nell'archivio locale.
+        È sincronizzato per evitare scritture e letture concorrenti corrotte.
+    }
 
+    public synchronized List<String> getLocalData() {
+        Ritorna l'elenco di tutte le rilevazioni possedute localmente.
+        Restituisce una copia della lista per evitare concorrenza durante l'iterazione.
+    }
 
-	- public static void getLocalData(){
-        	RITORNA TUTTE LE RILEVAZIONI LOCALI
-    	  }
-
-
-
-    	- public static void getContent(String nome){
-        	RITORNA IL CONTENUTO DEL FILE CON NOME DATO
-    	  }
-
+    public synchronized String getContent(String nome){
+        Recupera il contenuto di una specifica misurazione dato il suo nome.
+        Ritorna null se la misurazione non è presente.
+    }
 
 2) NodoSensore.java
 
