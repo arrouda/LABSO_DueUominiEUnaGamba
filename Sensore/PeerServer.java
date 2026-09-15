@@ -1,6 +1,5 @@
-package sensore;
+package Sensore;
 
-import java.util.*;
 import java.io.*;
 import java.net.*;
 

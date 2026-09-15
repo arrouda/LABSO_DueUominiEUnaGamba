@@ -1,3 +1,5 @@
+package Sensore;
+
 public class NodoSensore {
     public static void main(String[] args) {
         /*
