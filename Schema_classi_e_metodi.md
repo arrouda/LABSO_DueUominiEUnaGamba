@@ -315,20 +315,25 @@ METODI:
 METODI:
 
 
-	- public void run() {
+	public PeerServer(int porta, ArchivioLocale archivio){
+        costruttore
+    }
 
-		mantiene attivo un server socket per il trasferimento peer to peer
+    @Override
+    public void run(){
+        Ciclo principale del server peer. Accetta le connessioni in arrivo ed esegue l'handler
 
+    public synchronized void sendFile(Socket socketClient) {
+        Gestisco il trasferimento del file verso il socket connesso
+    }
 
-	  }
+    public void arresta(){
+        Creo il metodo per arrestare il server quando il nodo si disconnette
+    }
 
-
-	- synchronized void sendFile(Socket socket, String Nome) {
-
-		invia rilevazione richiesta via socket garantendo di servire una sola
-		richiesta (accodo le altre attraverso la sincronizzazione)
-
-	  }
+    public int getPorta(){
+        Ritorna la porta effettiva su cui il server e' in ascolto
+    }
 
 
 
