@@ -1,3 +1,5 @@
+package  Aggregatore;
+
 
 import Comunicazione.GestoreMessaggi;
  

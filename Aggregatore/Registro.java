@@ -1,3 +1,5 @@
+package  Aggregatore;
+
 import java.util.*;
 
 public class Registro {
