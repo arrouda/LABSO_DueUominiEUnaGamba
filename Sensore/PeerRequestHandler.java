@@ -1,5 +1,9 @@
 package Sensore;
 
+import java.util.*;
+import java.io.*;
+import java.net.*;
+
 import Comunicazione.*;
 import java.io.*;
 import java.net.*;
@@ -19,7 +23,7 @@ public class PeerRequestHandler implements Runnable {
         this.archivio = archivio;
     }
 
-    //Gestisce l'interazioen diretta di invio del file sulla singola socket verso il sensore che ha richiesto il download
+    //Gestisce l'interazione diretta di invio del file sulla singola socket verso il sensore che ha richiesto il download
     @Override
     public void run() {
         
