@@ -1,23 +1,35 @@
+package Comunicazione;
+
 public class InfoNodo {
 
-    public void getIP() {
-        // ritorna IP
-        // Aggiornare tipo metodo
+    /*
+     InfoNodo è una classe che serve per creare oggetti
+     che contengano le informazioni dei nodi sensore del sistema
+     in modo che le altre classi come il downloader e l'Aggregatore
+     possano richiamarle quando servono, senza dover accedere a tutta la classe
+     del NodoSensore
+     */
 
-        // TODO
+    private String id;
+    private String ip;
+    private int porta;
+
+    public InfoNodo(String id, String ip, int porta) {
+        this.id = id;
+        this.ip = ip;
+        this.porta = porta;
     }
 
-    public void getID() {
-        // ritorna ID
-        // Aggiornare tipo metodo
-
-        // TODO
+    public String getID() {
+        return id;
     }
 
-    public void getPort() {
-        // ritorna porta
-        // Aggiornare tipo metodo
-
-        // TODO
+    public String getIP() {
+        return ip;
     }
+
+    public int getPort() {
+        return porta;
+    }
+
 }
