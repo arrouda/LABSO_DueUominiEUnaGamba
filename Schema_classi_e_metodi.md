@@ -297,13 +297,13 @@ METODI:
 
 METODI:
 
-	- public void run() {
+    public PeerRequestHandler(Socket clientSocket, ArchivioLocale archivio){
+        costruttore
+    }
 
-		gestisce l'interazioen diretta di invio del
-		file sulla singola socket verso il sensore che ha richiesto il download
-
-	  }
-
+    public void run() {
+        
+        Gestisce l'interazioen diretta di invio del file sulla singola socket    verso il sensore che ha richiesto il download
 
 
 4) PeerServer.java
