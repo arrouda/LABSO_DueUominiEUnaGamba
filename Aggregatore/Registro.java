@@ -31,18 +31,18 @@ public class Registro {
                 }
             }
         }
- 
+
         // poi salviamo la nuova lista e aggiorniamo l'indice inverso
         datiDiNodo.put(nodeId, new HashSet<>(dataList));
         for (String dato : dataList) {
             nodiCheHanno.computeIfAbsent(dato, k -> new HashSet<>()).add(nodeId);
         }
- 
+
         // aggiorniamo anche dove si trova il nodo, nel caso sia cambiato
         ipDiNodo.put(nodeId, ip);
         portaDiNodo.put(nodeId, porta);
     }
- 
+
     // dato il nome di una rilevazione, dice quali nodi la possiedono
 
     public synchronized List<String> getNodesForData(String dataName) {
@@ -54,7 +54,7 @@ public class Registro {
         }
         return new ArrayList<>(nodi);
     }
- 
+
     // toglie completamente un nodo dal registro, insieme a tutte le sue rilevazioni
     // (viene usato sia quando il nodo fa QUIT sia quando la connessione cade di colpo)
 
@@ -75,9 +75,10 @@ public class Registro {
             }
         }
     }
- 
+
     // toglie solo un singolo dato da un nodo, senza rimuovere il nodo intero:
-    // serve per quando un download fallisce ma il nodo potrebbe avere ancora altro
+    // serve per quando un download fallisce (arriva NODE_FAILED da
+    // RobustDownloader/GestoreClient) ma il nodo potrebbe avere ancora altro
 
     public synchronized void removeNodeForData(String nodeId, String dataName) {
         Set<String> nodi = nodiCheHanno.get(dataName);
@@ -89,10 +90,10 @@ public class Registro {
             dati.remove(dataName);
         }
     }
- 
+
     // sceglie da quale nodo scaricare una rilevazione (mai da se stessi)
     // e ritorna "id;ip;porta" del nodo scelto, o null se non c'è nessuno
- 
+
     public synchronized String requestToken(String dataName, String clientNodeId) {
         Set<String> nodi = nodiCheHanno.get(dataName);
         if (nodi == null) {
@@ -105,7 +106,7 @@ public class Registro {
         }
         return null; // esiste solo il richiedente stesso, o nessuno
     }
- 
+
     // elenco completo di tutte le rilevazioni sulla rete con i relativi possessori,
     // usato dal comando "listdata" dell'aggregatore
     public synchronized Map<String, List<String>> getAllData() {
@@ -116,4 +117,3 @@ public class Registro {
         return risultato;
     }
 }
-

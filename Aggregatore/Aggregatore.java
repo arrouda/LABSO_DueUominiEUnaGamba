@@ -1,29 +1,52 @@
-package  Aggregatore;
-
+package Aggregatore;
+ 
 import java.io.*;
 import java.net.*;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
-
+ 
 public class Aggregatore {
-
+ 
     private Registro registro;
     private Logger log;
     private ServerSocket socketServer;
-
+ 
     // punto d'ingresso: ci si aspetta un solo argomento, la porta su cui
-    // l'aggregatore deve mettersi in ascolto 
+    // l'aggregatore deve mettersi in ascolto
     // Qui viene preparato tutto il necessario prima di accettare connessioni:
     // le due risorse condivise tra tutti i client (registro delle rilevazioni
     // e log delle operazioni) e il socket del server.
-    public static void main(String[] args) throws IOException {
-        int porta = Integer.parseInt(args[0]);
+    //
+    // Nota: le specifiche (pag. 10) usano "Master" come nome di esempio per
+    // questa classe (java Master 9000); qui è rimasto "Aggregatore" per
+    // coerenza col nome del package — da verificare con docente/tutor se il
+    // nome conta ai fini della valutazione (vedi documento incongruenze,
+    // punto 8).
+    public static void main(String[] args) {
+        if (args.length != 1) {
+            System.err.println("Uso: java Aggregatore.Aggregatore <porta>");
+            return;
+        }
+ 
+        int porta;
+        try {
+            porta = Integer.parseInt(args[0]);
+        } catch (NumberFormatException e) {
+            System.err.println("La porta deve essere un numero intero: " + args[0]);
+            return;
+        }
  
         Aggregatore aggregatore = new Aggregatore();
         aggregatore.registro = new Registro();
         aggregatore.log = new Logger();
-        aggregatore.socketServer = new ServerSocket(porta);
+ 
+        try {
+            aggregatore.socketServer = new ServerSocket(porta);
+        } catch (IOException e) {
+            System.err.println("Impossibile aprire il server sulla porta " + porta + ": " + e.getMessage());
+            return;
+        }
  
         // accept() blocca il thread che lo chiama finché non arriva qualcuno,
         // quindi lo mettiamo su un thread a parte: così il thread principale
@@ -31,13 +54,17 @@ public class Aggregatore {
         Thread threadAscolto = new Thread(() -> aggregatore.listenForClients());
         threadAscolto.start();
  
-        aggregatore.startCLI();
+        try {
+            aggregatore.startCLI();
+        } catch (IOException e) {
+            System.err.println("Errore nella CLI: " + e.getMessage());
+        }
     }
-
+ 
     // ciclo dei comandi digitati a tastiera mentre l'aggregatore è in esecuzione
-
+ 
     private void startCLI() throws IOException {
-        //gestisce un loop per i comanddi locali da tastiera (listdata, log, quit)
+        // gestisce un loop per i comandi locali da tastiera (listdata, log, quit)
         Scanner scanner = new Scanner(System.in);
         while (true) {
             System.out.print("> ");
@@ -66,17 +93,17 @@ public class Aggregatore {
         }
     }
  
-    // resta in ascolto di nuove connessioni: ogni volta che un sensore si
-    // collega, viene creato un GestoreClient dedicato su un thread nuovo,
-    // così più sensori possono essere serviti contemporaneamente
-    
-
-
-    private void listenForClients(){
-        //loop continuo con serverSocket.acceot() per accettare nuove connessioni
-        // dai sensori e instanziare per ciascuna un ClientHandler su un nuovo thread
-
-         while (true) {
+    // resta in ascolto di nuove connessioni: ogni volta che arriva qualcuno
+    // (un sensore che fa REGISTER, oppure un RobustDownloader che chiede
+    // REQUEST_TOKEN/RELEASE_TOKEN/NODE_FAILED con una connessione usa-e-getta)
+    // viene creato un GestoreClient dedicato su un thread nuovo, così più
+    // richieste possono essere servite contemporaneamente
+ 
+    private void listenForClients() {
+        // loop continuo con serverSocket.accept() per accettare nuove connessioni
+        // e instanziare per ciascuna un GestoreClient su un nuovo thread
+ 
+        while (true) {
             try {
                 Socket socket = socketServer.accept();
                 GestoreClient gestore = new GestoreClient(socket, registro, log);
@@ -88,5 +115,6 @@ public class Aggregatore {
             }
         }
     }
-
+ 
 }
+ 
