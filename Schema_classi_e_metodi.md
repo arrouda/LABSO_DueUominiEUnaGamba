@@ -224,7 +224,9 @@ LISTA CLASSI/FILE
 1) ArchivioLocale.java
 
 
-[Aggiungere commento ruolo della classe]
+Questa classe:
+    Gestisce la memorizzazione locale delle misurazioni (chiave-valore con la Map).
+    Utilizza metodi sincronizzati per garantire la mutua esclusione tra thread     che  leggono e le misurazioni e thread che ne inseriscono di nuove.
 
 
 METODI:
@@ -291,8 +293,9 @@ METODI:
 
 3) PeerRequestHandler.java
 
-
-[Aggiungere commento ruolo della classe]
+Questa classe:
+    Gestisce la singola richiesta di download proveniente da un altro nodo sensore (peer).
+    Legge il messaggio formattato con GestoreMessaggi, estrae la misurazione richiesta, recupera il valore dall'ArchivioLocale e risponde inviando il dato.
 
 
 METODI:
@@ -308,8 +311,10 @@ METODI:
 
 4) PeerServer.java
 
-
-[Aggiungere commento ruolo della classe]
+Questa classe:
+    Rimane in ascolto su una porta dedicata per ricevere le richieste di download
+provenienti dagli altri sensori.
+    Rispetta il vincolo di specifica servendo una sola richiesta alla volta: le altre connessioni in arrivo rimangono in attesa nella coda del ServerSocket
 
 
 METODI:
