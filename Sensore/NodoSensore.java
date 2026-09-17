@@ -16,6 +16,7 @@ public class NodoSensore{
     private static int portaAggregatore;
     private static String nodeId;
     private static int portaP2P = 9500;
+    private static String ipLocale = "127.0.0.1";
     private static ArchivioLocale archivio;
     private static PeerServer peerServer;
     

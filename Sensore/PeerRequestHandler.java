@@ -5,9 +5,6 @@ import java.io.*;
 import java.net.*;
 
 import Comunicazione.*;
-import java.io.*;
-import java.net.*;
-import java.util.*;
 
 public class PeerRequestHandler implements Runnable {
     
