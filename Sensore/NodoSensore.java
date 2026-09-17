@@ -21,7 +21,7 @@ public class NodoSensore{
     
     public static void main(String[] args) {
         
-        if(args.length < 2){
+        if(args.length < 2 || args.length > 3){
             System.out.println("Uso scorretto");
             return;
         }
@@ -32,7 +32,7 @@ public class NodoSensore{
             
             portaAggregatore = Integer.parseInt(args[1]);
 
-            if(args.length >= 3){
+            if(args.length == 3){
                 portaP2P = Integer.parseInt(args[2]);
             }
 
@@ -43,9 +43,9 @@ public class NodoSensore{
 
         nodeId = "peer_" + portaP2P;
         
-        archivio = new ArchivioLocale();
+        ArchivioLocale archivio = new ArchivioLocale();
         
-        peerServer = new PeerServer(portaP2P, archivio);
+        PeerServer peerServer = new PeerServer(portaP2P, archivio);
         Thread threadServer = new Thread(peerServer);
         threadServer.start();
 
