@@ -22,8 +22,8 @@ public class ArchivioLocale{
     }
 
     //Ritorno l'elenco di tutte le rilevazioni possedute localmente e restituisco una copia della lista per evitare concorrenza durante l'iterazione.
-    public syncronized List<String> getLocalData() {
-        List<String> listaNomi = new Arraylist<>(this.misurazioni.keySet());
+    public synchronized List<String> getLocalData() {
+        List<String> listaNomi = new ArrayList<>(this.misurazioni.keySet());
         Collections.sort(listaNomi);
         return listaNomi;
     }
