@@ -3,68 +3,43 @@ package Comunicazione;
 import java.io.*;
 import java.net.*;
 
-/* 
- Classe per la gestione della comunicazione di rete del client.
- Invio le richiesye tramite socket e ricevo le risposte dal server.
- Ho usato le classi PrintWriter e BufferedReader per poter leggere e scrivere per righe invece che per carattere.
+/**
+ * Classe per la gestione della comunicazione di rete TCP del client.
+ * Invia richieste tramite socket "usa-e-getta" e riceve le risposte dal server/peer.
+ * Utilizza PrintWriter e BufferedReader per la lettura/scrittura a righe di testo.
  */
-
 public class NetworkClient {
 
     public static String sendRequest(String ip, int porta, String message) {
-        
-        String Risposta = null;
+        String risposta = null;
 
-        try(
+        // Istanzia il socket vuoto per poter applicare il timeout sia alla connessione che alla lettura
+        try (Socket socket = new Socket()) {
 
-            /* 
-            Uso PrintWriter e BufferedReader per inviare e ricevere messaggi dal server
+            // Imposta il timeout di connessione a 10 secondi (10000 ms)
+            socket.connect(new InetSocketAddress(ip, porta), 10000);
 
-            Come visto nelle slide BufferedReader mi consete di leggere messaggi per righe, 
-            invece che per carattere come InputStraemReader.
-
-            Contestualmente PrintWriter mi permette di scrivere per righe
-            invece che per carattere come OutputStreamWriter.
-
-            */
-
-            Socket socket = new Socket(ip, porta);
-            PrintWriter out = new PrintWriter(new OutputStreamWriter(socket.getOutputStream()), true); 
-            BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-
-            //Nel PrintWriter, true serve a svuotare il buffer dopo ogni invio
-
-            // mettendo le risorse dentro il try vengono chiuse in automatico alla fine del blocco try, 
-            // anche in caso di eccezione 
-            // (try-with-resources è come se ci fosse un blocco finally che chiude le risorse con close)
-
-        ){
-
-            //imposto un timeout di 10 secondi entro il quale mi blocco se non ricevo risposta
-            // in questo modo sono sicuro che se un nodo sensore accetta la conensione ma poi non risoponde, 
-            // sto bloccato solo 10 sec.
-
+            // Imposta il timeout di lettura (SO_TIMEOUT) a 10 secondi
             socket.setSoTimeout(10000);
-            
-            /* 
-            ora invio i messaggi dal client al server con il PrintWriter 
-            e leggo la risposta dal server con il BufferedReader, 
-            Salvo la risposta del server nella variabile Risposta, che poi ritornerò al chiamante.
-            */ 
 
-            // Invia il messaggio al server
-            out.println(message);
+            // Inizializza i buffer di I/O legati alla socket
+            try (
+                PrintWriter out = new PrintWriter(new OutputStreamWriter(socket.getOutputStream()), true);
+                BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()))
+            ) {
+                // Invia il messaggio formattato
+                out.println(message);
 
-            //message sarà una stringa elaborata dal GestoreMessaggi con comando e parametri
-
-            // Leggi la risposta dal server
-            Risposta = in.readLine();
-
+                // Legge la riga di risposta inviata dal remoto
+                risposta = in.readLine();
+            }
 
         } catch (IOException e) {
+            // In caso di errore di connessione, timeout o nodo irraggiungibile,
+            // ritorna null consentendo al chiamante (es. RobustDownloader) di gestire il fallimento.
+            risposta = null;
         }
 
-    
-        return Risposta;
+        return risposta;
     }
 }

@@ -2,169 +2,122 @@ package Comunicazione;
 
 import java.util.*;
 
-/* 
- Classe per la gestione del download robusto di dati da nodi sensore.
- Il downloader chiede all'aggregatore il token del nodo che possiede una misurazione
- tenta il downlad e se ci riesce rilascia il token e comunica la rosposta
-
- Se no avvisa l'aggregatore che il nodo è irraggiungibile.
-
- il ciclo continua fino a che o non riesco a scaricare la misurazione o l'aggregatore non ha più nodi disponibili per quella misurazione
-*/
-
+/**
+ * Classe per la gestione del download robusto di dati da nodi sensore.
+ * Il downloader richiede all'aggregatore il token del nodo che possiede una misurazione,
+ * tenta il download P2P e, in caso di esito positivo, rilascia il token.
+ * In caso di errore/nodo irraggiungibile, avvisa l'aggregatore per aggiornare l'indice e riprova.
+ */
 public class RobustDownloader {
 
-    public String ipAggregatore;
-    public int portaAggregatore;
+    private String ipAggregatore;
+    private int portaAggregatore;
 
-
-    public RobustDownloader(String IP, int porta) {
-        this.ipAggregatore = IP;
-        this.portaAggregatore = porta;
-        
+    public RobustDownloader(String ipAggregatore, int portaAggregatore) {
+        this.ipAggregatore = ipAggregatore;
+        this.portaAggregatore = portaAggregatore;
     }
 
-    // Passo come parametro una stringa IdNodo e non direttamente il nodo 
-    // perchè poi accedo all'oggetto InfoNodo e recupero IP e porta.
+    
+    public String downloadWithRetry(String misurazione, String idNodoRichiedente) {
+        return downloadWhitRetry(misurazione, idNodoRichiedente);
+    }
 
-    // Passare la stringa e interrogare successivamente il registro mi facilita la trasmissione via socket.
 
-    public String downloadWhitRetry(String Misurazione, String IdNodoRichiedente) {
-
-        String download = "";
+    public String downloadWhitRetry(String misurazione, String idNodoRichiedente) {
+        String download = null;
         boolean downloadRiuscito = false;
 
-        while(!downloadRiuscito){
+        while (!downloadRiuscito) {
 
-            Map <String, String> token = requestToken(Misurazione, IdNodoRichiedente);
+            Map<String, String> token = requestToken(misurazione, idNodoRichiedente);
 
-            // se l'aggregatore non ha più nodi disponibili per la misurazione che sto cercando, 
-            // ritorno un messaggio di errore e interrompo il ciclo
-
-            if (token == null || !token.containsKey("ip")) {
-
-                System.err.println("Download fallito: nessuna sorgente disponibile per " + Misurazione);
+            // Se l'aggregatore non ha più nodi disponibili o la risposta non è valida, interrompe il ciclo
+            if (token == null || !token.containsKey("ip") || !token.containsKey("porta")) {
+                System.err.println("Download fallito: nessuna sorgente disponibile per " + misurazione);
                 break;
-
             }
 
             String ipNodoSensore = token.get("ip");
-            int portaNodoSensore = Integer.parseInt(token.get("porta"));
-            String idNodoSensore = token.get("idSensore");
+            String portaStr = token.get("porta");
+            // Gestione flessibile della chiave ID sorgente ("idSensore" o "id")
+            String idNodoSensore = token.getOrDefault("idSensore", token.get("id"));
 
-            // una volta ottenuti i dati del nodo che potrebbe possedere la misurazizione provo a scaricarla
-
-            download = tryDownload(ipNodoSensore, portaNodoSensore, Misurazione);
-
-            if(download != null && !download.isEmpty()){
-
-                downloadRiuscito = true;
-                releaseToken(Misurazione, idNodoSensore, downloadRiuscito);
-
-            } else {
-
-                // se il download non è riuscito, rilascio il token al nodo sensore, comunico all'aggregatore e rimango nel ciclo while
-
-                System.err.println("Nodo " + idNodoSensore + " irraggiungibile. Riprovo...");
-                notificaAggregatore(idNodoSensore, Misurazione);
-
+            int portaNodoSensore;
+            try {
+                portaNodoSensore = Integer.parseInt(portaStr);
+            } catch (NumberFormatException e) {
+                System.err.println("Errore: formato porta non valido (" + portaStr + ") dal token. Interruzione.");
+                break;
             }
 
+            // Tenta il download P2P dal nodo sorgente
+            download = tryDownload(ipNodoSensore, portaNodoSensore, misurazione);
+
+            if (download != null && !download.isEmpty()) {
+                downloadRiuscito = true;
+                releaseToken(misurazione, idNodoSensore, downloadRiuscito);
+            } else {
+                // Se il download fallisce, notifica l'aggregatore per rimuovere l'entry e continua il ciclo
+                System.err.println("Nodo " + (idNodoSensore != null ? idNodoSensore : ipNodoSensore) + " irraggiungibile. Riprovo...");
+                notificaAggregatore(idNodoSensore, misurazione);
+            }
         }
 
         return download;
     }
 
-    
-
+    /**
+     * Rilascia il token comunicando all'aggregatore l'esito finale del download.
+     */
     public void releaseToken(String misurazione, String idNodoSensore, boolean success) {
-
         Map<String, String> parametri = new HashMap<>();
         parametri.put("misurazione", misurazione);
-        parametri.put("idSensore", idNodoSensore);
+        parametri.put("idSensore", idNodoSensore != null ? idNodoSensore : "");
         parametri.put("success", Boolean.toString(success));
 
-        // formatto il messaggio in modo che sia inviabile all'aggregatore con serializedMessage di GestoreMessaggi
-
         String messaggio = GestoreMessaggi.serializedMessage("RELEASE_TOKEN", parametri);
-        
-        //invio la comunicazione all'aggregatore di rilascio del token, con il risultato del download (successo o fallimento)
         NetworkClient.sendRequest(ipAggregatore, portaAggregatore, messaggio);
     }
 
-
-
-
-    // metodo per ottenere il token del nodo sensore che possiede la misurazione che voglio scaricare 
-
-    private Map<String, String> requestToken(String Misurazione, String IdNodoRichiedente) {
-
+    /**
+     * Richiede all'aggregatore l'indirizzo e la porta del nodo sensore che possiede la misurazione.
+     */
+    private Map<String, String> requestToken(String misurazione, String idNodoRichiedente) {
         Map<String, String> parametri = new HashMap<>();
-
-        parametri.put("misurazione", Misurazione);
-        parametri.put("idRichiedente", IdNodoRichiedente);
-
-        // uso il metodo in GestoreMessaggi per serializzare il messaggio da inviare all'aggregatore
-        // serializedMessage trasforma la mappa e il comando in una stringa da inviare al server
+        parametri.put("misurazione", misurazione);
+        parametri.put("idRichiedente", idNodoRichiedente);
 
         String messaggio = GestoreMessaggi.serializedMessage("REQUEST_TOKEN", parametri);
-
-        // sendRequest apre un socket con l'aggregatore, invia il messaggio e riceve la risposta
-        // salvo la risposta dell'aggregatore che conterrà il token
-
         String risposta = NetworkClient.sendRequest(ipAggregatore, portaAggregatore, messaggio);
 
-        // se non ho ricevuto risposta dall'aggregatore o se la risposta è vuota ritorno null
-        // in questo modo gestisco il 
         if (risposta == null || risposta.isEmpty()) {
             return null;
         }
 
-        // ricostruisco la mappa con i parametri del token (ip, id, porta) attraverso il metodo parseMessage di GestoreMessaggi
-        Map<String, String> token = new HashMap<>();
-        token = GestoreMessaggi.parseMessage(risposta);
-
-        return token;
-
+        return GestoreMessaggi.parseMessage(risposta);
     }
 
-
-
-    // metodo di download della misurazione
-
-    private String tryDownload(String ipNodoSensore, int portaNodoSensore, String Misurazione) {
-
-        // uso il metodo in GestoreMessaggi per serializzare il messaggio da inviare al nodo sensore
-        // serializedMessage trasforma la mappa e il comando in una stringa da inviare al server
-
+    /**
+     * Invia la richiesta di download P2P direttamente al nodo sensore sorgente.
+     */
+    private String tryDownload(String ipNodoSensore, int portaNodoSensore, String misurazione) {
         Map<String, String> parametri = new HashMap<>();
-        parametri.put("misurazione", Misurazione);
-
-        String messaggio = GestoreMessaggi.serializedMessage("DOWNLOAD", parametri);
-
-        // sendRequest apre un socket con il nodo sensore, invia il messaggio e riceve la risposta
-        // salvo la risposta del nodo sensore che conterrà i dati della misurazione per poi ritornarla;
-
-        String download = NetworkClient.sendRequest(ipNodoSensore, portaNodoSensore, messaggio);
-
-        return download;
-
-    }
-
-    
-
-
-    private void notificaAggregatore(String idNodoSensore, String misurazione) {
-        Map<String, String> parametri = new HashMap<>();
-        parametri.put("idSensore", idNodoSensore);
         parametri.put("misurazione", misurazione);
 
-        // formatto il messaggio in modo che sia inviabile all'aggregatore con serializedMessage di GestoreMessaggi
-
-        String messaggio = GestoreMessaggi.serializedMessage("NODE_FAILED", parametri);
-
-        NetworkClient.sendRequest(ipAggregatore, portaAggregatore, messaggio);
+        String messaggio = GestoreMessaggi.serializedMessage("DOWNLOAD", parametri);
+        return NetworkClient.sendRequest(ipNodoSensore, portaNodoSensore, messaggio);
     }
 
+    /**
+     * Avvisa l'aggregatore che il nodo sorgente è risultato irraggiungibile o privo del dato.
+     */
+    private void notificaAggregatore(String idNodoSensore, String misurazione) {
+        Map<String, String> parametri = new HashMap<>();
+        parametri.put("idSensore", idNodoSensore != null ? idNodoSensore : "");
+        parametri.put("misurazione", misurazione);
 
+        String messaggio = GestoreMessaggi.serializedMessage("NODE_FAILED", parametri);
+        NetworkClient.sendRequest(ipAggregatore, portaAggregatore, messaggio);
+    }
 }
