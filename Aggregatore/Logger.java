@@ -1,31 +1,36 @@
-package  Aggregatore;
+package Aggregatore;
 
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Logger gestisce la cronologia thread-safe delle operazioni di download di rete.
+ * Registra le richieste completate o fallite e fornisce l'elenco per il comando CLI log.
+ */
 public class Logger {
 
+    private final List<String> logs = new ArrayList<>();
+    private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
 
-    private List<String> voci = new ArrayList<>();
-    private static final DateTimeFormatter FORMATO_ORA = DateTimeFormatter.ofPattern("HH:mm");
 
-    // salvo un tentativo di download: chi lo ha chiesto, a chi, cosa è andato bene
-    // (formato tipo "13:00 R0 da: peer0 a: peer1", come nell'esempio delle specifiche)
     public synchronized void logOperation(String sourceNode, String destNode, String dataName, boolean success) {
-        String ora = LocalTime.now().format(FORMATO_ORA);
-        String voce = ora + " " + dataName + " da: " + sourceNode + " a: " + destNode;
-        if (!success) {
-            voce += " [FALLITO]";
-        }
-        voci.add(voce);
+
+        String timestamp = LocalTime.now().format(TIME_FORMATTER);
+        String status = success ? "" : " (FALLITO)";
+        
+        // Formato conforme alle specifiche: "13:00 R0 da: peer0 a: peer1"[cite: 2]
+        String logEntry = String.format("%s %s da: %s a: %s%s", 
+                timestamp, dataName, sourceNode, destNode, status);
+        
+        logs.add(logEntry);
+
     }
 
-    // do una copia della lista, non quella vera, altrimenti da fuori
-    // qualcuno potrebbe modificarla e rovinarmi lo stato interno
     public synchronized List<String> getLogs() {
-        return new ArrayList<>(voci);
-    }
 
+        return new ArrayList<>(logs);
+    
+    }
 }
