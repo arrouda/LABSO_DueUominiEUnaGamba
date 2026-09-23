@@ -1,6 +1,6 @@
-package sensore;
+package Sensore;
 
-import comunicazione.*;
+import Comunicazione.*;
 import java.io.*;
 import java.net.*;
 import java.util.*;
