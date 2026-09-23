@@ -1,74 +1,55 @@
-package Sensore;
+package sensore;
 
 import java.io.*;
 import java.net.*;
 
 public class PeerServer implements Runnable {
 
-    private int porta;
-
-    private ArchivioLocale archivio;
-
-    private ServerSocket serverSocket;
-
+    private final int portaP2P;
+    private final ArchivioLocale archivio;
     private volatile boolean inEsecuzione;
 
-    public PeerServer(int porta, ArchivioLocale archivio){
-        this.porta = porta;
+    public PeerServer(int portaP2P, ArchivioLocale archivio) {
+        this.portaP2P = portaP2P;
         this.archivio = archivio;
         this.inEsecuzione = true;
     }
 
-    //Ciclo principale del server peer. Accetta le connessioni in arrivo ed esegue l'handler.
     @Override
-    public void run(){
-        try{
-            
-            this.serverSocket = new ServerSocket(this.porta);
-            System.out.println("In ascolto per download P2P sulla porta: " + this.porta);
+    public void run() {
+        try (ServerSocket serverSocket = new ServerSocket(portaP2P)) {
+            System.out.println("[SERVER P2P] In ascolto sulla porta P2P " + portaP2P);
 
-            while(this.inEsecuzione){
-                try{
+            while (inEsecuzione) {
+                try {
+                    // Resta in attesa di connessioni P2P in ingresso
+                    Socket clientSocket = serverSocket.accept();
                     
-                    Socket socketClient = this.serverSocket.accept();
-                    sendFile(socketClient);
-
-                } catch(IOException e){
-                    if(!this.inEsecuzione){
-                        break;
+                    // Invia il file richiesto in modo mutualmente esclusivo
+                    sendFile(clientSocket);
+                } catch (IOException e) {
+                    if (!inEsecuzione) {
+                        break; // Server fermato intenzionalmente
                     }
-                    System.out.println("Errore nell'accettare connessione peer");
+                    System.err.println("[SERVER P2P ERRORE] Errore nell'accettare la connessione: " + e.getMessage());
                 }
             }
-
-        }catch(IOException e){
-            System.out.println("Impossibile avviare il server sulla porta " + this.porta);
-        }finally{
-            arresta();
+        } catch (IOException e) {
+            System.err.println("[SERVER P2P ERRORE] Impossibile avviare il ServerSocket sulla porta " 
+                               + portaP2P + ": " + e.getMessage());
         }
     }
 
-    //Gestisco il trasferimento del file verso il socket connesso
-    public synchronized void sendFile(Socket socketClient) {
-        PeerRequestHandler handler = new PeerRequestHandler(socketClient, this.archivio);
+    public synchronized void sendFile(Socket socket) {
+        // Istanzia l'handler per processare la richiesta
+        PeerRequestHandler handler = new PeerRequestHandler(socket, archivio);
+        
+        // Invocazione diretta di run() nello stesso thread (senza start()) 
+        // per mantenere bloccata la sezione critica fino al completamento dell'invio
         handler.run();
     }
 
-    //Creo il metodo per arrestare il server quando il nodo si disconnette.
-    public void arresta(){
+    public void stopServer() {
         this.inEsecuzione = false;
-        try{
-            if(this.serverSocket != null && !this.serverSocket.isClosed()){
-                this.serverSocket.close();
-            }
-        }catch(IOException e){
-            System.out.println("Errore durante la chiusura del socket server");
-        }
     }
-
-    //Ritorna la porta effettiva su cui il server e' in ascolto.
-    public int getPorta(){
-        return this.porta;
-    }
-
 }

@@ -1,37 +1,49 @@
-package Sensore;
+package sensore;
 
 import java.util.*;
 
-//Questa classe:
-// Gestisce la memorizzazione locale delle misurazioni (chiave-valore con la Map).
-// Utilizza metodi sincronizzati per garantire la mutua esclusione tra thread che  leggono e le misurazioni e thread che ne inseriscono di nuove.
-public class ArchivioLocale{
-    
-    //Questa e' la tabella in memoria che conserva le rilevazioni.
+ // Questa classe:
+ // - Gestisce il magazzino locale delle rilevazioni possedute dal Nodo Sensore.
+ // - Mantiene la mappa nomeRisorsa -> contenutoMisura ed offre accesso thread-safe 
+ //   synchronized per prevenire race condition tra l'interfaccia utente (CLI) 
+ //   e le richieste P2P in ingresso gestite dal PeerServer.
+
+ public class ArchivioLocale {
+
+    // Struttura dati per memorizzare le misurazioni locali (Nome -> Contenuto)
     private final Map<String, String> misurazioni;
 
-    public ArchivioLocale(){
+
+    public ArchivioLocale() {
         this.misurazioni = new HashMap<>();
+        
+        // Pre-allocazione di esempio come consentito dalle specifiche di progetto
+        this.misurazioni.put("R0", "Valore=21.5C;Pressione=1012hPa");
+        this.misurazioni.put("R1", "CO2=450ppm;Umidita=55%");
     }
 
-    //Salvo o aggiorno una misurazione nell'archivio locale.
-    public synchronized void aggiungiMisura(String nome, String contenuto){
-        if(nome != null && contenuto != null){
-            this.misurazioni.put(nome, contenuto);        
+    public synchronized void aggiungiMisura(String nome, String contenuto) {
+        if (nome != null && !nome.trim().isEmpty() && contenuto != null) {
+            this.misurazioni.put(nome.trim(), contenuto);
         }
     }
 
-    //Ritorno l'elenco di tutte le rilevazioni possedute localmente e restituisco una copia della lista per evitare concorrenza durante l'iterazione.
+
+    public synchronized void aggiungiMisure(String nome, String contenuto) {
+        aggiungiMisura(nome, contenuto);
+    }
+
+
     public synchronized List<String> getLocalData() {
-
-        List<String> listaNomi = new ArrayList<>(this.misurazioni.keySet());
-        Collections.sort(listaNomi);
-        return listaNomi;
+        return new ArrayList<>(this.misurazioni.keySet());
     }
 
-    //Recupero il contenuto di una specifica misurazione dato il suo nome e ritorno null se la misurazione non e' presente.
-    public synchronized String getContent(String nome){
-        return this.misurazioni.get(nome);
+   
+    public synchronized String getContent(String nome) {
+        if (nome == null) {
+            return null;
+        }
+        return this.misurazioni.get(nome.trim());
     }
-
 }
+
