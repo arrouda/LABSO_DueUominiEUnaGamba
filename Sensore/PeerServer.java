@@ -1,4 +1,4 @@
-package sensore;
+package Sensore;
 
 import java.io.*;
 import java.net.*;
