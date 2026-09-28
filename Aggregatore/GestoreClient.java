@@ -279,14 +279,6 @@ public class GestoreClient implements Runnable {
                 return GestoreMessaggi.serializedMessage("RESPONSE", rispostaMap);
             }
 
-            // VECCHIO QUIT (se funziona cavare)
-
-            /* case "QUIT": {
-                rispostaMap.put("status", "OK");
-                return GestoreMessaggi.serializedMessage("RESPONSE", rispostaMap);
-
-            } */
-
 
             // Se la richiesta non è tra quelle precedente non sono in grado di gestirla e quindi restituisco un errore
             default:
