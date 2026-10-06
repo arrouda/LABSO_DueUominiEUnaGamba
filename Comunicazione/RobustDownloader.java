@@ -26,7 +26,8 @@ public class RobustDownloader {
 
     /*
     metodo per fare il download e riprovare fino a che o non mancano più nodi (in quel caso con il break si chiude)
-    o fino a quando il download non finisce correttamente e allora la variabile di controllo cambia e restiruisco il contenuto del download
+    o fino a quando il download non finisce correttamente e allora la variabile di controllo cambia 
+    e restiruisco il contenuto del download
 
     Nel caso in cui il nodo si è disconnesso e io ho ancora la rilevazione nell'aggregatore, 
     richiamo un metodo che avvisa l'aggregatore il quale rimuoverà la rilevazione dal registro.
@@ -52,7 +53,8 @@ public class RobustDownloader {
             String ipNodoSensore = token.get("ip");
             String portaStr = token.get("porta");
 
-            // Gestione flessibile della chiave ID sorgente ("idSensore" o "id") per sicurezza perchè abbiamo usato nomi diversi
+            // Gestione flessibile della chiave ID sorgente ("idSensore" o "id") 
+            // per sicurezza perchè abbiamo usato nomi diversi
             String idNodoSensore = token.getOrDefault("idSensore", token.get("id"));
             int portaNodoSensore;
             
